@@ -21,6 +21,10 @@ buildConfig {
     buildConfigField("VERSION", projectVersionName)
     buildConfigField("IDENTITY_READER_UPDATE_URL", System.getenv("IDENTITY_READER_UPDATE_URL") ?: "")
     buildConfigField("IDENTITY_READER_UPDATE_WEBSITE_URL", System.getenv("IDENTITY_READER_UPDATE_WEBSITE_URL") ?: "")
+    buildConfigField(
+        "IDENTITY_READER_BACKEND_URL",
+        System.getenv("IDENTITY_READER_BACKEND_URL") ?: "https://verifier.multipaz.org/identityreaderbackend-open"
+    )
     useKotlinOutput { internalVisibility = false }
 }
 
@@ -108,8 +112,8 @@ android {
         applicationId = "org.multipaz.identityreader"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = projectVersionCode
+        versionName = projectVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     packaging {

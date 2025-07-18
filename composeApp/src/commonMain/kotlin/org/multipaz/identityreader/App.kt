@@ -127,7 +127,7 @@ class App(
 
             readerBackendClient = ReaderBackendClient(
                 // Use the deployed backend by default..
-                readerBackendUrl = "https://verifier.multipaz.org/identityreaderbackend",
+                readerBackendUrl = BuildConfig.IDENTITY_READER_BACKEND_URL,
                 //readerBackendUrl = "http://127.0.0.1:8020",
                 storage = Platform.nonBackedUpStorage,
                 httpClientEngineFactory = platformHttpClientEngineFactory(),

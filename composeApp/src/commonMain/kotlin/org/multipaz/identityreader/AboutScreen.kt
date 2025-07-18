@@ -44,8 +44,10 @@ fun AboutScreen(
                 MarkdownText(
                     content = """
                         Multipaz Identity Reader version **${BuildConfig.VERSION}**
-                        
+
                         Visit [https://apps.multipaz.org](https://apps.multipaz.org) for updates.
+
+                        Reader Backend URL: ${BuildConfig.IDENTITY_READER_BACKEND_URL}
                     """.trimIndent()
                 )
             }
