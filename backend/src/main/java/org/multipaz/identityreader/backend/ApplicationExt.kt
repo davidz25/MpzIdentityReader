@@ -20,6 +20,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimePeriod
@@ -97,6 +99,16 @@ fun Application.configureRouting(configuration: ServerConfiguration) {
     }
     routing {
         get("/") { runRequest { fetchResource(call, "index.html") } }
+        get("/readerRootCert") {
+            runRequest {
+                handleGetReaderRootCert(backendEnvironmentDeferred = env, call = call, forTrustedDevices = true)
+            }
+        }
+        get("/readerRootCertUntrustedDevices") {
+            runRequest {
+                handleGetReaderRootCert(backendEnvironmentDeferred = env, call = call, forTrustedDevices = false)
+            }
+        }
         get("/{path...}") {
             runRequest { fetchResource(call, call.parameters["path"]!!) }
         }
@@ -122,6 +134,21 @@ fun Application.configureRouting(configuration: ServerConfiguration) {
                 )
             }
         }
+    }
+}
+
+private suspend fun handleGetReaderRootCert(
+    backendEnvironmentDeferred: Deferred<BackendEnvironment>,
+    call: ApplicationCall,
+    forTrustedDevices: Boolean
+) {
+    val backendEnvironment = backendEnvironmentDeferred.await()
+    withContext(currentCoroutineContext() + backendEnvironment) {
+        val identity = getReaderRootIdentity(forTrustedDevices = forTrustedDevices)
+        call.respondText(
+            contentType = ContentType.Text.Plain,
+            text = identity.certificateChain.certificates.joinToString { it.toPem() }
+        )
     }
 }
 
