@@ -7,10 +7,7 @@ import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpStatusCode
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.io.bytestring.ByteString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -35,6 +32,8 @@ import org.multipaz.util.Logger
 import org.multipaz.util.Platform
 import org.multipaz.util.fromBase64Url
 import org.multipaz.util.toBase64Url
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 private val backendRegistrationSpec = StorageTableSpec(
     name = "ReaderBackendClientRegistrationData",

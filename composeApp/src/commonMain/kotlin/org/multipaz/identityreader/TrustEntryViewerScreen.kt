@@ -133,7 +133,6 @@ fun TrustEntryViewerScreen(
                     when (it) {
                         is TrustEntryX509Cert -> AnnotatedString("IACA certificate")
                         is TrustEntryVical -> AnnotatedString("VICAL")
-                        else -> null
                     }
                 },
                 onBackPressed = onBackPressed,

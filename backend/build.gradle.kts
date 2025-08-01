@@ -28,6 +28,8 @@ kotlin {
 
     compilerOptions {
         allWarningsAsErrors = true
+        optIn.add("kotlin.time.ExperimentalTime")
+        freeCompilerArgs.add("-Xexpect-actual-classes")
     }
 }
 

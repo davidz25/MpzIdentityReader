@@ -1,9 +1,7 @@
 package org.multipaz.identityreader.libbackend
 
 import io.ktor.http.HttpStatusCode
-import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimePeriod
-import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.io.bytestring.ByteString
@@ -38,8 +36,10 @@ import org.multipaz.trustmanagement.toCbor
 import org.multipaz.util.fromBase64Url
 import org.multipaz.util.toBase64Url
 import kotlin.random.Random
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 // Note: ReaderIdentity is also defined on the client-side but in another package. Be careful not to mix them up,
 //   especially in ReaderBackendTest which includes both this code and the client-side code.

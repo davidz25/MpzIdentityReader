@@ -7,7 +7,6 @@ import io.ktor.http.HttpStatusCode
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.DateTimePeriod
-import kotlinx.datetime.Instant
 import kotlinx.io.bytestring.ByteString
 import kotlinx.serialization.json.JsonObject
 import org.junit.Before
@@ -23,7 +22,6 @@ import org.multipaz.crypto.X509Cert
 import org.multipaz.crypto.X509CertChain
 import org.multipaz.identityreader.libbackend.ReaderBackend
 import org.multipaz.identityreader.libbackend.SignedInGoogleUser
-import org.multipaz.identityreader.libbackend.ReaderIdentity as BackendReaderIdentity
 import org.multipaz.mdoc.util.MdocUtil
 import org.multipaz.securearea.AndroidKeystoreSecureArea
 import org.multipaz.securearea.SecureArea
@@ -41,6 +39,8 @@ import kotlin.test.assertNull
 import kotlin.test.fail
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
+import org.multipaz.identityreader.libbackend.ReaderIdentity as BackendReaderIdentity
 
 class ReaderBackendTest {
     private class LoopbackReaderBackendClient(
