@@ -35,6 +35,7 @@ actual fun rememberImagePicker(
         ) {
             picker.dismissViewControllerAnimated(true, null)
             CoroutineScope(Dispatchers.Main).launch {
+                @Suppress("UNCHECKED_CAST")
                 val results = didFinishPicking as List<PHPickerResult>
                 val ret = mutableListOf<ByteString>()
                 for (result in results) {
