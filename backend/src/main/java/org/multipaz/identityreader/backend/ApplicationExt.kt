@@ -172,6 +172,8 @@ private suspend fun googleIdTokenVerifier(
         SignedInGoogleUser(
             id = payload.subject,
             email = payload.email,
+            displayName = payload.get("name") as String?,
+            profilePictureUri = payload.get("picture") as String?,
         )
     )
 }

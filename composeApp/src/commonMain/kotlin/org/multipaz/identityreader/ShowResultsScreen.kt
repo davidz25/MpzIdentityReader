@@ -53,6 +53,7 @@ import org.multipaz.documenttype.knowntypes.DrivingLicense
 import org.multipaz.mdoc.response.DeviceResponseParser
 import org.multipaz.trustmanagement.TrustManager
 import org.multipaz.trustmanagement.TrustPoint
+import org.multipaz.util.Logger
 import kotlin.time.Clock
 import kotlin.time.Instant
 

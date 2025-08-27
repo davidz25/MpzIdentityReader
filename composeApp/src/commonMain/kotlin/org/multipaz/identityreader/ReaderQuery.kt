@@ -39,6 +39,15 @@ enum class ReaderQuery(
         encodedSessionTranscript: ByteString,
         readerBackendClient: ReaderBackendClient
     ): ByteString {
+        val readerIdentityId = when (settingsModel.readerAuthMethod.value) {
+            ReaderAuthMethod.NO_READER_AUTH,
+            ReaderAuthMethod.CUSTOM_KEY,
+            ReaderAuthMethod.STANDARD_READER_AUTH -> null
+            ReaderAuthMethod.STANDARD_READER_AUTH_WITH_GOOGLE_ACCOUNT_DETAILS -> ""
+            ReaderAuthMethod.IDENTITY_FROM_GOOGLE_ACCOUNT ->  {
+                settingsModel.readerAuthMethodGoogleIdentity.value!!.id
+            }
+        }
         val deviceRequest = when (settingsModel.readerAuthMethod.value) {
             ReaderAuthMethod.NO_READER_AUTH -> {
                 generateEncodedDeviceRequest(
@@ -51,23 +60,18 @@ enum class ReaderQuery(
                     readerKeyCertification = null
                 )
             }
-            ReaderAuthMethod.GOOGLE_ACCOUNT,
-            ReaderAuthMethod.STANDARD_READER_AUTH -> {
+            ReaderAuthMethod.IDENTITY_FROM_GOOGLE_ACCOUNT,
+            ReaderAuthMethod.STANDARD_READER_AUTH,
+            ReaderAuthMethod.STANDARD_READER_AUTH_WITH_GOOGLE_ACCOUNT_DETAILS -> {
                 val (keyInfo, keyCertification) = try {
-                    if (settingsModel.readerAuthMethod.value == ReaderAuthMethod.GOOGLE_ACCOUNT) {
-                        readerBackendClient.getKey(
-                            readerIdentityId = settingsModel.readerAuthMethodGoogleIdentity.value!!.id
-                        )
-                    } else {
-                        readerBackendClient.getKey()
-                    }
+                    readerBackendClient.getKey(readerIdentityId)
                 } catch (e: ReaderIdentityNotAvailableException) {
                     try {
                         Logger.w(TAG, "The reader identity we're configured for is no longer working", e)
                         Logger.i(TAG, "Resetting configuration to standard reader auth")
                         settingsModel.readerAuthMethod.value = ReaderAuthMethod.STANDARD_READER_AUTH
                         settingsModel.readerAuthMethodGoogleIdentity.value = null
-                        readerBackendClient.getKey()
+                        readerBackendClient.getKey(null)
                     } catch (e: Throwable) {
                         Logger.e(TAG, "Error getting certified reader key, proceeding without reader authentication", e)
                         Pair(null, null)

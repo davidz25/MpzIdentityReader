@@ -1,9 +1,7 @@
 package org.multipaz.identityreader
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,22 +10,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Block
-import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -40,7 +31,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
@@ -56,7 +46,6 @@ import multipazidentityreader.composeapp.generated.resources.app_icon
 import multipazidentityreader.composeapp.generated.resources.reader_identity_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import org.multipaz.compose.decodeImage
 import org.multipaz.crypto.X509CertChain
 import org.multipaz.prompt.PromptModel
 import org.multipaz.prompt.requestPassphrase
@@ -289,11 +278,50 @@ the request is from
                     }
                 }
 
+                val signedInData = settingsModel.signedIn.collectAsState()
+                signedInData.value?.let {
+                    entries.add {
+                        Row(
+                            modifier = Modifier.clickable {
+                                settingsModel.readerAuthMethod.value = ReaderAuthMethod.STANDARD_READER_AUTH_WITH_GOOGLE_ACCOUNT_DETAILS
+                                settingsModel.customReaderAuthKey.value = null
+                                settingsModel.customReaderAuthCertChain.value = null
+                                // Prime the cache
+                                coroutineScope.launch {
+                                    try {
+                                        readerBackendClient.getKey(readerIdentityId = "")
+                                    } catch (e: Throwable) {
+                                        Logger.w(TAG, "Error priming cache for standard reader auth" +
+                                                " w/ Google Account details", e)
+                                    }
+                                }
+                            },
+                            horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.Start),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            it.ProfilePicture(
+                                size = 32.dp
+                            )
+                            EntryItem(
+                                modifier = Modifier.weight(1.0f),
+                                key = it.id,
+                                valueText = "Information from your Google Account (id, email, and profile picture) " +
+                                "will be included in the request",
+                            )
+                            Checkbox(
+                                checked = (readerAuthMethod.value ==
+                                        ReaderAuthMethod.STANDARD_READER_AUTH_WITH_GOOGLE_ACCOUNT_DETAILS),
+                                onCheckedChange = null
+                            )
+                        }
+                    }
+                }
+
                 availableReaderIdentities.value?.forEach { readerIdentityFromGoogleAccount ->
                     entries.add {
                         Row(
                             modifier = Modifier.clickable {
-                                settingsModel.readerAuthMethod.value = ReaderAuthMethod.GOOGLE_ACCOUNT
+                                settingsModel.readerAuthMethod.value = ReaderAuthMethod.IDENTITY_FROM_GOOGLE_ACCOUNT
                                 settingsModel.readerAuthMethodGoogleIdentity.value = readerIdentityFromGoogleAccount
                                 // Prime the cache
                                 coroutineScope.launch {
@@ -316,7 +344,7 @@ the request is from
                             )
                             Checkbox(
                                 checked = (
-                                        readerAuthMethod.value == ReaderAuthMethod.GOOGLE_ACCOUNT &&
+                                        readerAuthMethod.value == ReaderAuthMethod.IDENTITY_FROM_GOOGLE_ACCOUNT &&
                                         readerAuthMethodGoogleId.value == readerIdentityFromGoogleAccount
                                 ),
                                 onCheckedChange = null
@@ -344,7 +372,7 @@ the request is from
                                             ReaderAuthMethod.CUSTOM_KEY -> {
                                                 onShowCertificateChain(settingsModel.customReaderAuthCertChain.value!!)
                                             }
-                                            ReaderAuthMethod.GOOGLE_ACCOUNT -> {
+                                            ReaderAuthMethod.IDENTITY_FROM_GOOGLE_ACCOUNT -> {
                                                 coroutineScope.launch {
                                                     onShowCertificateChain(
                                                         readerBackendClient.getKey(
@@ -354,10 +382,19 @@ the request is from
                                                     )
                                                 }
                                             }
+
                                             ReaderAuthMethod.STANDARD_READER_AUTH -> {
                                                 coroutineScope.launch {
                                                     onShowCertificateChain(
-                                                        readerBackendClient.getKey().second
+                                                        readerBackendClient.getKey(readerIdentityId = null).second
+                                                    )
+                                                }
+                                            }
+
+                                            ReaderAuthMethod.STANDARD_READER_AUTH_WITH_GOOGLE_ACCOUNT_DETAILS -> {
+                                                coroutineScope.launch {
+                                                    onShowCertificateChain(
+                                                        readerBackendClient.getKey(readerIdentityId = "").second
                                                     )
                                                 }
                                             }

@@ -148,7 +148,15 @@ class App(
                     Logger.i(TAG, "Error when ensuring reader keys: $e")
                 }
             }
-            ReaderAuthMethod.GOOGLE_ACCOUNT -> {
+            ReaderAuthMethod.STANDARD_READER_AUTH_WITH_GOOGLE_ACCOUNT_DETAILS -> {
+                try {
+                    readerBackendClient.getKey("")
+                    Logger.i(TAG, "Success ensuring reader keys w/ Google account details")
+                } catch (e: Throwable) {
+                    Logger.i(TAG, "Error when ensuring reader keys: $e")
+                }
+            }
+            ReaderAuthMethod.IDENTITY_FROM_GOOGLE_ACCOUNT -> {
                 val identity = settingsModel.readerAuthMethodGoogleIdentity.value
                 try {
                     readerBackendClient.getKey(readerIdentityId = identity!!.id)

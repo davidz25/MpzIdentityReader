@@ -307,7 +307,8 @@ open class ReaderBackendClient(
      * network I/O is reduced for future calls. For example, it might be advantageous to do this
      * at application startup.
      *
-     * @param readerIdentityId the reader identity in use or `null` for the default reader identity.
+     * @param readerIdentityId the reader identity in use, `null` for the default reader identity,
+     *   and the empty string for default reader identity w/ Google Account details.
      * @param atTime the current time, to take into consideration for purposing of evicting expired keys.
      * @return a [KeyInfo] for a key in [SecureArea] and the certification from the reader backend.
      * @throws ReaderIdentityNotAvailableException if the caller does not have access to the given [readerIdentityId].

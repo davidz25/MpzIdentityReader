@@ -16,11 +16,16 @@ import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import org.multipaz.asn1.ASN1Integer
+import org.multipaz.asn1.OID
 import org.multipaz.cbor.annotation.CborSerializable
+import org.multipaz.certext.GoogleAccount
+import org.multipaz.certext.MultipazExtension
+import org.multipaz.certext.toCbor
 import org.multipaz.crypto.EcPrivateKey
 import org.multipaz.crypto.EcPublicKey
 import org.multipaz.crypto.X500Name
 import org.multipaz.crypto.X509CertChain
+import org.multipaz.crypto.X509Extension
 import org.multipaz.device.AssertionNonce
 import org.multipaz.device.DeviceAssertion
 import org.multipaz.device.DeviceAttestation
@@ -59,7 +64,9 @@ data class ReaderIdentity(
 @CborSerializable
 data class SignedInGoogleUser(
     val id: String,
-    val email: String?
+    val email: String?,
+    val displayName: String?,
+    val profilePictureUri: String?,
 )
 
 /**
@@ -237,7 +244,7 @@ open class ReaderBackend(
         clientData.deviceAttestation.validateAssertion(deviceAssertion)
 
         val readerIdentityString = request["readerIdentity"]?.jsonPrimitive?.content
-        val readerIdentity = if (readerIdentityString != null) {
+        val (readerIdentity, includeGoogleAccountDetails) = if (readerIdentityString != null) {
             // Right now we allow untrusted devices to pick a reader identity. This is because
             // they also proven they're able to sign into a Google account. We could restrict
             // this to only trusted devices...
@@ -248,17 +255,22 @@ open class ReaderBackend(
                     buildJsonObject {}
                 )
             }
-            val identitiesForUser = getReaderIdentitiesForUser(clientData.signedInGoogleUser!!)
-            val identity = identitiesForUser.find { it.id == readerIdentityString }
-            if (identity == null) {
-                return Pair(
-                    HttpStatusCode.Forbidden,
-                    buildJsonObject {}
-                )
+
+            if (readerIdentityString == "") {
+                Pair(null, true)
+            } else {
+                val identitiesForUser = getReaderIdentitiesForUser(clientData.signedInGoogleUser!!)
+                val identity = identitiesForUser.find { it.id == readerIdentityString }
+                if (identity == null) {
+                    return Pair(
+                        HttpStatusCode.Forbidden,
+                        buildJsonObject {}
+                    )
+                }
+                Pair(identity, false)
             }
-            identity
         } else {
-            null
+            Pair(null, false)
         }
 
         val (chosenReaderRootKey, chosenReaderRootCertChain) = if (readerIdentity != null) {
@@ -282,14 +294,31 @@ open class ReaderBackend(
             val validFrom = now - jitterFrom
             val validUntil = now.plus(readerCertDuration, TimeZone.currentSystemDefault()) + jitterUntil
             val key = EcPublicKey.fromJwk(keyJwk.jsonObject)
+            val extensions = if (includeGoogleAccountDetails) {
+                listOf(X509Extension(
+                    oid = OID.X509_EXTENSION_MULTIPAZ_EXTENSION.oid,
+                    isCritical = false,
+                    data = ByteString(MultipazExtension(
+                        googleAccount = GoogleAccount(
+                            id = clientData.signedInGoogleUser!!.id,
+                            emailAddress = clientData.signedInGoogleUser!!.email ?: "",
+                            displayName = clientData.signedInGoogleUser!!.displayName ?: "",
+                            profilePictureUri = clientData.signedInGoogleUser!!.profilePictureUri ?: ""
+                        )
+                    ).toCbor())
+                ))
+            } else {
+                emptyList()
+            }
             val readerCert = MdocUtil.generateReaderCertificate(
                 readerRootCert = chosenReaderRootCertChain.certificates[0],
                 readerRootKey = chosenReaderRootKey,
                 readerKey = key,
-                subject = X500Name.fromName("CN=Multipaz Identity Verifier Single-Use Key"),
+                subject = X500Name.fromName("CN=Multipaz Identity Reader Single-Use Key"),
                 serial = ASN1Integer.fromRandom(numBits = 128, random = random),
                 validFrom = validFrom,
-                validUntil = validUntil
+                validUntil = validUntil,
+                extensions = extensions
             )
             val readerCertChain = X509CertChain(listOf(readerCert) + chosenReaderRootCertChain.certificates)
             readerCertifications.add(readerCertChain)
