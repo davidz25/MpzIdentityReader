@@ -7,6 +7,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -247,6 +248,14 @@ class App(
         val navController = rememberNavController()
         AppTheme {
             PromptDialogs(Platform.promptModel)
+
+            if (BuildConfig.IDENTITY_READER_REQUIRE_TOS_ACCEPTANCE) {
+                val tosAgreedTo = settingsModel.tosAgreedTo.collectAsState()
+                if (!tosAgreedTo.value) {
+                    TosScreen(settingsModel = settingsModel)
+                    return@AppTheme
+                }
+            }
 
             NavHost(
                 navController = navController,

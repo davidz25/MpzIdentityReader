@@ -36,6 +36,9 @@ buildConfig {
     buildConfigField("IDENTITY_READER_UPDATE_WEBSITE_URL",
         System.getenv("IDENTITY_READER_UPDATE_WEBSITE_URL") ?: ""
     )
+    buildConfigField("IDENTITY_READER_REQUIRE_TOS_ACCEPTANCE",
+        System.getenv("IDENTITY_READER_REQUIRE_TOS_ACCEPTANCE") != null
+    )
     useKotlinOutput { internalVisibility = false }
 }
 

@@ -144,6 +144,7 @@ class SettingsModel private constructor(
         bind(customReaderAuthCertChain, "customReaderAuthCertChain", null)
         bind(explicitlySignedOut, "explicitlySignedOut", false)
         bind(signedIn, "signedIn", null)
+        bind(tosAgreedTo, "tosAgreedTo", false)
     }
 
     val logTransactions = MutableStateFlow<Boolean>(false)
@@ -156,4 +157,5 @@ class SettingsModel private constructor(
     val customReaderAuthCertChain = MutableStateFlow<X509CertChain?>(null)
     val explicitlySignedOut = MutableStateFlow<Boolean>(false)
     val signedIn = MutableStateFlow<SignInWithGoogleUserData?>(null)
+    val tosAgreedTo = MutableStateFlow<Boolean>(false)
 }
