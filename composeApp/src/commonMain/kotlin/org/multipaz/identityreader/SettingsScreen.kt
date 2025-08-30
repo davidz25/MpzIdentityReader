@@ -9,8 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBalance
-import androidx.compose.material.icons.filled.Fingerprint
+import androidx.compose.material.icons.outlined.AccountBalance
+import androidx.compose.material.icons.outlined.Fingerprint
+import androidx.compose.material.icons.outlined.Science
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -26,9 +27,11 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun SettingsScreen(
+    settingsModel: SettingsModel,
     onBackPressed: () -> Unit,
     onReaderIdentityPressed: () -> Unit,
     onTrustedIssuersPressed: () -> Unit,
+    onDeveloperSettingsPressed: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -57,7 +60,7 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Fingerprint,
+                            imageVector = Icons.Outlined.Fingerprint,
                             contentDescription = null
                         )
                         EntryItem(
@@ -74,7 +77,7 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.AccountBalance,
+                            imageVector = Icons.Outlined.AccountBalance,
                             contentDescription = null
                         )
                         EntryItem(
@@ -82,6 +85,24 @@ fun SettingsScreen(
                             valueText = "Manage the list of identity issuers this reader will accept "
                                     + "identity credentials from"
                         )
+                    }
+                }
+                if (settingsModel.devMode.value) {
+                    entries.add {
+                        Row(
+                            modifier = Modifier.clickable { onDeveloperSettingsPressed() },
+                            horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.Start),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Science,
+                                contentDescription = null
+                            )
+                            EntryItem(
+                                key = "Developer settings",
+                                valueText = "Manage developer settings"
+                            )
+                        }
                     }
                 }
                 EntryList(

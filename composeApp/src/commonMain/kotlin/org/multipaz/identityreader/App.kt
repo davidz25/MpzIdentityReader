@@ -22,6 +22,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.io.bytestring.ByteString
 import org.multipaz.cbor.Cbor
 import org.multipaz.cbor.Simple
@@ -29,6 +30,7 @@ import org.multipaz.compose.prompt.PromptDialogs
 import org.multipaz.documenttype.DocumentTypeRepository
 import org.multipaz.documenttype.knowntypes.DrivingLicense
 import org.multipaz.mdoc.transport.MdocTransportOptions
+import org.multipaz.mdoc.transport.NfcTransportMdocReader
 import org.multipaz.trustmanagement.CompositeTrustManager
 import org.multipaz.trustmanagement.TrustEntryVical
 import org.multipaz.trustmanagement.TrustEntryX509Cert
@@ -40,6 +42,7 @@ import org.multipaz.util.fromBase64Url
 import org.multipaz.util.toBase64Url
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.seconds
 
 data class UrlLaunchData(
     val url: String,
@@ -70,14 +73,11 @@ class App(
     private lateinit var settingsModel: SettingsModel
     private lateinit var readerBackendClient: ReaderBackendClient
 
-    // This is set to FALSE for now because Apple Wallet's L2CAP implementation
-    // appears to be buggy.
-    //
-    private val mdocTransportOptionsForNfcEngagement =
-        MdocTransportOptions(bleUseL2CAP = false)
+    private fun getMdocTransportOptionsForNfcEngagement() =
+        MdocTransportOptions(bleUseL2CAP = settingsModel.bleL2capEnabled.value)
 
-    private val mdocTransportOptionsForQrEngagement =
-        MdocTransportOptions(bleUseL2CAP = true)
+    private fun getMdocTransportOptionsForQrEngagement() =
+        MdocTransportOptions(bleUseL2CAP = settingsModel.bleL2capEnabled.value)
 
     private val initLock = Mutex()
     private var initialized = false
@@ -92,7 +92,7 @@ class App(
                 val encodedDeviceEngagement =
                     ByteString(urlLaunchData.url.substringAfter("mdoc:").fromBase64Url())
                 readerModel.reset()
-                readerModel.setMdocTransportOptions(mdocTransportOptionsForQrEngagement)
+                readerModel.setMdocTransportOptions(getMdocTransportOptionsForQrEngagement())
                 readerModel.setConnectionEndpoint(
                     encodedDeviceEngagement = encodedDeviceEngagement,
                     handover = Simple.NULL,
@@ -267,7 +267,7 @@ class App(
                         settingsModel = settingsModel,
                         readerBackendClient = readerBackendClient,
                         promptModel = promptModel,
-                        mdocTransportOptionsForNfcEngagement = mdocTransportOptionsForNfcEngagement,
+                        mdocTransportOptionsForNfcEngagement = getMdocTransportOptionsForNfcEngagement(),
                         onScanQrClicked = {
                             navController.navigate(route = ScanQrDestination.route)
                         },
@@ -301,7 +301,7 @@ class App(
                                 val encodedDeviceEngagement =
                                     ByteString(mdocUri.substringAfter("mdoc:").fromBase64Url())
                                 readerModel.reset()
-                                readerModel.setMdocTransportOptions(mdocTransportOptionsForQrEngagement)
+                                readerModel.setMdocTransportOptions(getMdocTransportOptionsForQrEngagement())
                                 readerModel.setConnectionEndpoint(
                                     encodedDeviceEngagement = encodedDeviceEngagement,
                                     handover = Simple.NULL,
@@ -353,17 +353,47 @@ class App(
                         documentTypeRepository = documentTypeRepository,
                         issuerTrustManager = compositeTrustManager,
                         onBackPressed = { urlLaunchData?.finish() ?: navController.navigateUp() },
+                        onShowDetailedResults = {
+                            if (settingsModel.devMode.value) {
+                                navController.navigate(ShowDetailedResultsDestination.route)
+                            }
+                        }
+                    )
+                }
+                composable(route = ShowDetailedResultsDestination.route) {
+                    ShowDetailedResultsScreen(
+                        readerQuery = ReaderQuery.valueOf(settingsModel.selectedQueryName.value),
+                        readerModel = readerModel,
+                        documentTypeRepository = documentTypeRepository,
+                        issuerTrustManager = compositeTrustManager,
+                        onBackPressed = { urlLaunchData?.finish() ?: navController.navigateUp() },
+                        onShowCertificateChain = { certificateChain ->
+                            val certificateDataBase64 = Cbor.encode(certificateChain.toDataItem()).toBase64Url()
+                            navController.navigate(
+                                route = CertificateViewerDestination.route + "/" + certificateDataBase64
+                            )
+                        },
                     )
                 }
                 composable(route = SettingsDestination.route) {
                     SettingsScreen(
+                        settingsModel = settingsModel,
                         onBackPressed = { navController.navigateUp() },
                         onReaderIdentityPressed = {
                             navController.navigate(ReaderIdentityDestination.route)
                         },
                         onTrustedIssuersPressed = {
                             navController.navigate(TrustedIssuersDestination.route)
+                        },
+                        onDeveloperSettingsPressed = {
+                            navController.navigate(DeveloperSettingsDestination.route)
                         }
+                    )
+                }
+                composable(route = DeveloperSettingsDestination.route) {
+                    DeveloperSettingsScreen(
+                        settingsModel = settingsModel,
+                        onBackPressed = { navController.navigateUp() },
                     )
                 }
                 composable(route = ReaderIdentityDestination.route) {

@@ -1,6 +1,7 @@
 package org.multipaz.identityreader
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,10 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -38,6 +43,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
@@ -50,6 +56,8 @@ import io.github.alexzhirkevich.compottie.LottieCompositionSpec
 import io.github.alexzhirkevich.compottie.animateLottieCompositionAsState
 import io.github.alexzhirkevich.compottie.rememberLottieComposition
 import io.github.alexzhirkevich.compottie.rememberLottiePainter
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.io.bytestring.ByteString
 import multipazidentityreader.composeapp.generated.resources.Res
@@ -115,6 +123,25 @@ private suspend fun signOut(
     }
 }
 
+private lateinit var snackbarHostState: SnackbarHostState
+
+private fun showToast(message: String) {
+    CoroutineScope(Dispatchers.Main).launch {
+        snackbarHostState.currentSnackbarData?.dismiss()
+        when (snackbarHostState.showSnackbar(
+            message = message,
+            actionLabel = "OK",
+            duration = SnackbarDuration.Short,
+        )) {
+            SnackbarResult.Dismissed -> {
+            }
+
+            SnackbarResult.ActionPerformed -> {
+            }
+        }
+    }
+}
+
 @Composable
 fun StartScreen(
     settingsModel: SettingsModel,
@@ -137,6 +164,7 @@ fun StartScreen(
     val showAccountDialog = remember { mutableStateOf(false) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val showSignInErrorDialog = remember { mutableStateOf<Throwable?>(null) }
+    snackbarHostState = remember { SnackbarHostState() }
 
     showSignInErrorDialog.value?.let {
         AlertDialog(
@@ -200,6 +228,7 @@ fun StartScreen(
         return
     }
 
+    var devModeNumTimesPressed by remember { mutableStateOf(0) }
     ModalNavigationDrawer(
         drawerContent = {
             ModalDrawerSheet {
@@ -209,10 +238,10 @@ fun StartScreen(
                 ) {
                     Spacer(Modifier.height(12.dp))
                     Text(
-                        "Multipaz Identity Reader",
                         modifier = Modifier.padding(16.dp),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        text = "Multipaz Identity Reader",
                     )
                     HorizontalDivider()
 
@@ -266,8 +295,23 @@ fun StartScreen(
                         showAccountDialog.value = true
                     },
                     settingsModel = settingsModel,
+                    titleClicable = true,
+                    onTitleClicked = {
+                        if (settingsModel.devMode.value) {
+                            showToast("You are already a developer")
+                        } else {
+                            if (devModeNumTimesPressed == 5) {
+                                showToast("You are now a developer")
+                                settingsModel.devMode.value = true
+                            } else {
+                                showToast("Tap ${5 - devModeNumTimesPressed} more times to become a developer")
+                                devModeNumTimesPressed += 1
+                            }
+                        }
+                    }
                 )
             },
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         ) { innerPadding ->
             Surface(
                 modifier = Modifier.fillMaxSize().padding(innerPadding),

@@ -145,6 +145,9 @@ class SettingsModel private constructor(
         bind(explicitlySignedOut, "explicitlySignedOut", false)
         bind(signedIn, "signedIn", null)
         bind(tosAgreedTo, "tosAgreedTo", false)
+        bind(devMode, "devMode", false)
+        // L2CAP is off by default for now because Apple Wallet's L2CAP implementation is buggy.
+        bind(bleL2capEnabled, "bleL2capEnabled", false)
     }
 
     val logTransactions = MutableStateFlow<Boolean>(false)
@@ -158,4 +161,6 @@ class SettingsModel private constructor(
     val explicitlySignedOut = MutableStateFlow<Boolean>(false)
     val signedIn = MutableStateFlow<SignInWithGoogleUserData?>(null)
     val tosAgreedTo = MutableStateFlow<Boolean>(false)
+    val devMode = MutableStateFlow<Boolean>(false)
+    val bleL2capEnabled = MutableStateFlow<Boolean>(false)
 }

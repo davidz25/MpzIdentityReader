@@ -2,6 +2,7 @@ package org.multipaz.identityreader
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -64,6 +65,7 @@ fun ShowResultsScreen(
     documentTypeRepository: DocumentTypeRepository,
     issuerTrustManager: TrustManager,
     onBackPressed: () -> Unit,
+    onShowDetailedResults: () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     val documents = remember { mutableStateOf<List<MdocDocument>?>(null) }
@@ -98,6 +100,7 @@ fun ShowResultsScreen(
                 ShowResultsScreenFailed(
                     message = "Something went wrong",
                     secondaryMessage = null,
+                    onShowDetailedResults = onShowDetailedResults
                 )
             } else {
                 if (documents.value == null && verificationError.value == null) {
@@ -106,15 +109,21 @@ fun ShowResultsScreen(
                     ShowResultsScreenFailed(
                         message = "Document verification failed",
                         secondaryMessage = "The returned document is from an unknown issuer",
+                        onShowDetailedResults = onShowDetailedResults
                     )
                 } else {
                     if (documents.value!!.size == 0) {
                         ShowResultsScreenFailed(
                             message = "No documents returned",
                             secondaryMessage = null,
+                            onShowDetailedResults = onShowDetailedResults
                         )
                     } else {
-                        ShowResultsScreenSuccess(readerQuery, documents.value!!)
+                        ShowResultsScreenSuccess(
+                            readerQuery = readerQuery,
+                            documents = documents.value!!,
+                            onShowDetailedResults = onShowDetailedResults
+                        )
                     }
                 }
             }
@@ -132,7 +141,7 @@ private data class MdocDocument(
     val trustPoint: TrustPoint
 )
 
-data class MdocNamespace(
+private data class MdocNamespace(
     val name: String,
     val dataElements: Map<String, MdocClaim>
 )
@@ -237,6 +246,7 @@ private fun ShowResultsScreenValidating() {
 private fun ShowResultsScreenFailed(
     message: String,
     secondaryMessage: String?,
+    onShowDetailedResults: () -> Unit
 ) {
     val errorComposition by rememberLottieComposition {
         LottieCompositionSpec.JsonString(
@@ -265,6 +275,10 @@ private fun ShowResultsScreenFailed(
                 ),
                 contentDescription = null,
                 modifier = Modifier.size(200.dp)
+                    .combinedClickable(
+                        onClick = {},
+                        onDoubleClick = { onShowDetailedResults() }
+                    ),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -291,7 +305,8 @@ private fun ShowResultsScreenFailed(
 @Composable
 private fun ShowResultsScreenSuccess(
     readerQuery: ReaderQuery,
-    documents: List<MdocDocument>
+    documents: List<MdocDocument>,
+    onShowDetailedResults: () -> Unit
 ) {
     val successComposition by rememberLottieComposition {
         LottieCompositionSpec.JsonString(
@@ -341,19 +356,24 @@ private fun ShowResultsScreenSuccess(
                 ReaderQuery.AGE_OVER_18 -> {
                     ShowAgeOver(
                         age = 18,
-                        document = document
+                        document = document,
+                        onShowDetailedResults = onShowDetailedResults
                     )
                 }
 
                 ReaderQuery.AGE_OVER_21 -> {
                     ShowAgeOver(
                         age = 21,
-                        document = document
+                        document = document,
+                        onShowDetailedResults = onShowDetailedResults
                     )
                 }
 
                 ReaderQuery.IDENTIFICATION -> {
-                    ShowIdentification(document)
+                    ShowIdentification(
+                        document = document,
+                        onShowDetailedResults = onShowDetailedResults
+                    )
                 }
             }
         }
@@ -363,7 +383,8 @@ private fun ShowResultsScreenSuccess(
 @Composable
 private fun ShowAgeOver(
     age: Int,
-    document: MdocDocument
+    document: MdocDocument,
+    onShowDetailedResults: () -> Unit
 ) {
     val portraitBitmap = remember { getPortraitBitmap(document) }
     val mdlNameSpace = document.namespaces.find { it.name == DrivingLicense.MDL_NAMESPACE }
@@ -386,7 +407,13 @@ private fun ShowAgeOver(
     )
 
     Image(
-        modifier = Modifier.fillMaxWidth().height(300.dp).padding(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(300.dp).padding(16.dp)
+            .combinedClickable(
+                onClick = {},
+                onDoubleClick = { onShowDetailedResults() }
+            ),
         bitmap = portraitBitmap!!,
         contentDescription = null
     )
@@ -412,7 +439,8 @@ private fun ShowAgeOver(
 
 @Composable
 private fun ShowIdentification(
-    document: MdocDocument
+    document: MdocDocument,
+    onShowDetailedResults: () -> Unit
 ) {
     val portraitBitmap = remember { getPortraitBitmap(document) }
     val mdlNameSpace = document.namespaces.find { it.name == DrivingLicense.MDL_NAMESPACE }
@@ -427,7 +455,14 @@ private fun ShowIdentification(
     )
 
     Image(
-        modifier = Modifier.fillMaxWidth().height(300.dp).padding(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(300.dp)
+            .padding(16.dp)
+            .combinedClickable(
+                onClick = {},
+                onDoubleClick = { onShowDetailedResults() }
+            ),
         bitmap = portraitBitmap!!,
         contentDescription = null
     )

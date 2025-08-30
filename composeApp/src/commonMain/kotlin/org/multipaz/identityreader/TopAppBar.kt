@@ -1,5 +1,6 @@
 package org.multipaz.identityreader
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -38,13 +39,22 @@ fun TopAppBar(
     onMenuPressed: (() -> Unit)? = null,
     onAccountPressed: (() -> Unit)? = null,
     settingsModel: SettingsModel? = null,
-    actions: @Composable (RowScope.() -> Unit) = {}
+    actions: @Composable (RowScope.() -> Unit) = {},
+    titleClicable: Boolean = false,
+    onTitleClicked: (() -> Unit)? = null
 ) {
     // Can't have both back and menu at the same time...
     require(onBackPressed == null || onMenuPressed == null)
     CenterAlignedTopAppBar(
         title = {
-            title?.let { Text(text = it) }
+            title?.let {
+                Text(
+                    modifier = Modifier.clickable(enabled = titleClicable) {
+                        onTitleClicked!!.invoke()
+                    },
+                    text = it
+                )
+            }
         },
         modifier = Modifier,
         navigationIcon = {

@@ -11,6 +11,7 @@ import kotlinx.io.bytestring.ByteString
 import org.multipaz.cbor.Bstr
 import org.multipaz.cbor.Cbor
 import org.multipaz.cbor.DataItem
+import org.multipaz.cbor.Simple
 import org.multipaz.cbor.Tagged
 import org.multipaz.cbor.buildCborArray
 import org.multipaz.crypto.Crypto
@@ -24,13 +25,27 @@ import org.multipaz.mdoc.transport.MdocTransportFactory
 import org.multipaz.mdoc.transport.MdocTransportOptions
 import org.multipaz.util.Constants
 import org.multipaz.util.Logger
+import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+
+enum class EngagementType(val description: String) {
+    QR("QR code"),
+    NFC_STATIC_HANDOVER("NFC Static Handover"),
+    NFC_NEGOTIATED_HANDOVER("NFC Negotiated Handover"),
+}
 
 data class ReaderModelResult(
     val status: Long?,
     val encodedDeviceResponse: ByteString?,
     val encodedSessionTranscript: ByteString,
-    val eReaderKey: EcPrivateKey
+    val eReaderKey: EcPrivateKey,
+
+    val engagementType: EngagementType,
+    val durationEngagementReceivedToRequestSent: Duration,
+    val durationRequestSentToResponseReceived: Duration,
+    val durationScanningTime: Duration?,
+    val connectionMethod: MdocConnectionMethod
 )
 
 class ReaderModel {
@@ -207,6 +222,8 @@ class ReaderModel {
     ): ReaderModelResult {
         println("In doReaderFlow()")
 
+        val timeOfEngagementReceived = Clock.System.now()
+
         val transport = if (existingTransport != null) {
             existingTransport
         } else {
@@ -229,6 +246,17 @@ class ReaderModel {
             transport
         }
 
+        Logger.iCbor(TAG, "handover", Cbor.encode(handover))
+        val engagementType = if (handover == Simple.NULL) {
+            EngagementType.QR
+        } else {
+            if (handover.asArray[1] == Simple.NULL) {
+                EngagementType.NFC_STATIC_HANDOVER
+            } else {
+                EngagementType.NFC_NEGOTIATED_HANDOVER
+            }
+        }
+
         val sessionEncryption = SessionEncryption(
             MdocRole.MDOC_READER,
             eReaderKey,
@@ -237,6 +265,7 @@ class ReaderModel {
         )
 
         println("OK, with transport: $transport")
+        val connectionMethod = transport.connectionMethod
         try {
             transport.open(deviceEngagement!!.eSenderKey)
             transport.sendMessage(
@@ -245,8 +274,10 @@ class ReaderModel {
                     statusCode = null
                 )
             )
+            val timeOfFirstMessageSent = Clock.System.now()
 
             val sessionData = transport.waitForMessage()
+            val timeOfFirstResponseReceived = Clock.System.now()
             if (sessionData.isEmpty()) {
                 // TODO: showToast("Received transport-specific session termination message from holder")
                 transport.close()
@@ -254,7 +285,12 @@ class ReaderModel {
                     status = null,
                     encodedDeviceResponse = null,
                     encodedSessionTranscript = encodedSessionTranscript,
-                    eReaderKey = eReaderKey
+                    eReaderKey = eReaderKey,
+                    engagementType = engagementType,
+                    durationEngagementReceivedToRequestSent = timeOfFirstMessageSent - timeOfEngagementReceived,
+                    durationRequestSentToResponseReceived = timeOfFirstResponseReceived - timeOfFirstMessageSent,
+                    durationScanningTime = transport.scanningTime,
+                    connectionMethod = connectionMethod
                 )
             }
 
@@ -280,7 +316,12 @@ class ReaderModel {
                 status = status,
                 encodedDeviceResponse = message?.let { ByteString(it) },
                 encodedSessionTranscript = encodedSessionTranscript,
-                eReaderKey = eReaderKey
+                eReaderKey = eReaderKey,
+                engagementType = engagementType,
+                durationEngagementReceivedToRequestSent = timeOfFirstMessageSent - timeOfEngagementReceived,
+                durationRequestSentToResponseReceived = timeOfFirstResponseReceived - timeOfFirstMessageSent,
+                durationScanningTime = transport.scanningTime,
+                connectionMethod = connectionMethod
             )
         } finally {
             /*
