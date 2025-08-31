@@ -88,6 +88,8 @@ class App(
                 return
             }
 
+            settingsModel = SettingsModel.create(Platform.storage)
+
             startDestination = if (urlLaunchData != null) {
                 val encodedDeviceEngagement =
                     ByteString(urlLaunchData.url.substringAfter("mdoc:").fromBase64Url())
@@ -116,8 +118,6 @@ class App(
                 identifier = "userTrustManager",
             )
             compositeTrustManager = CompositeTrustManager(listOf(builtInTrustManager, userTrustManager))
-
-            settingsModel = SettingsModel.create(Platform.storage)
 
             readerBackendClient = ReaderBackendClient(
                 // Use the deployed backend by default.. replace with http://127.0.0.1:8020 or similar
