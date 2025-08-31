@@ -65,11 +65,12 @@ fun ShowResultsScreen(
     documentTypeRepository: DocumentTypeRepository,
     issuerTrustManager: TrustManager,
     onBackPressed: () -> Unit,
-    onShowDetailedResults: () -> Unit
+    onShowDetailedResults: (() -> Unit)?
 ) {
     val coroutineScope = rememberCoroutineScope()
     val documents = remember { mutableStateOf<List<MdocDocument>?>(null) }
     val verificationError = remember { mutableStateOf<Throwable?>(null) }
+    print("onShowDetailedResults: $onShowDetailedResults foo")
 
     LaunchedEffect(Unit) {
         if (readerModel.error == null) {
@@ -246,7 +247,7 @@ private fun ShowResultsScreenValidating() {
 private fun ShowResultsScreenFailed(
     message: String,
     secondaryMessage: String?,
-    onShowDetailedResults: () -> Unit
+    onShowDetailedResults: (() -> Unit)?
 ) {
     val errorComposition by rememberLottieComposition {
         LottieCompositionSpec.JsonString(
@@ -275,10 +276,14 @@ private fun ShowResultsScreenFailed(
                 ),
                 contentDescription = null,
                 modifier = Modifier.size(200.dp)
-                    .combinedClickable(
-                        onClick = {},
-                        onDoubleClick = { onShowDetailedResults() }
-                    ),
+                    .let {
+                        if (onShowDetailedResults != null) {
+                            it.combinedClickable(
+                                onClick = {},
+                                onDoubleClick = { onShowDetailedResults() }
+                            )
+                        } else it
+                    },
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -306,7 +311,7 @@ private fun ShowResultsScreenFailed(
 private fun ShowResultsScreenSuccess(
     readerQuery: ReaderQuery,
     documents: List<MdocDocument>,
-    onShowDetailedResults: () -> Unit
+    onShowDetailedResults: (() -> Unit)?
 ) {
     val successComposition by rememberLottieComposition {
         LottieCompositionSpec.JsonString(
@@ -384,7 +389,7 @@ private fun ShowResultsScreenSuccess(
 private fun ShowAgeOver(
     age: Int,
     document: MdocDocument,
-    onShowDetailedResults: () -> Unit
+    onShowDetailedResults: (() -> Unit)?
 ) {
     val portraitBitmap = remember { getPortraitBitmap(document) }
     val mdlNameSpace = document.namespaces.find { it.name == DrivingLicense.MDL_NAMESPACE }
@@ -410,10 +415,16 @@ private fun ShowAgeOver(
         modifier = Modifier
             .fillMaxWidth()
             .height(300.dp).padding(16.dp)
-            .combinedClickable(
-                onClick = {},
-                onDoubleClick = { onShowDetailedResults() }
-            ),
+            .let {
+                println("onShowDetailedResults: $onShowDetailedResults")
+                if (onShowDetailedResults != null) {
+                    println("foo")
+                    it.combinedClickable(
+                        onClick = {},
+                        onDoubleClick = { onShowDetailedResults() }
+                    )
+                } else it
+            },
         bitmap = portraitBitmap!!,
         contentDescription = null
     )
@@ -440,7 +451,7 @@ private fun ShowAgeOver(
 @Composable
 private fun ShowIdentification(
     document: MdocDocument,
-    onShowDetailedResults: () -> Unit
+    onShowDetailedResults: (() -> Unit)?
 ) {
     val portraitBitmap = remember { getPortraitBitmap(document) }
     val mdlNameSpace = document.namespaces.find { it.name == DrivingLicense.MDL_NAMESPACE }
@@ -459,10 +470,14 @@ private fun ShowIdentification(
             .fillMaxWidth()
             .height(300.dp)
             .padding(16.dp)
-            .combinedClickable(
-                onClick = {},
-                onDoubleClick = { onShowDetailedResults() }
-            ),
+            .let {
+                if (onShowDetailedResults != null) {
+                    it.combinedClickable(
+                        onClick = {},
+                        onDoubleClick = { onShowDetailedResults() }
+                    )
+                } else it
+            },
         bitmap = portraitBitmap!!,
         contentDescription = null
     )

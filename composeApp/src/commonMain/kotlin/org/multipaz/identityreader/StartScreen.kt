@@ -130,7 +130,7 @@ private fun showToast(message: String) {
         snackbarHostState.currentSnackbarData?.dismiss()
         when (snackbarHostState.showSnackbar(
             message = message,
-            actionLabel = "OK",
+            actionLabel = null,
             duration = SnackbarDuration.Short,
         )) {
             SnackbarResult.Dismissed -> {
@@ -298,13 +298,18 @@ fun StartScreen(
                     titleClicable = true,
                     onTitleClicked = {
                         if (settingsModel.devMode.value) {
-                            showToast("You are already a developer")
+                            showToast("Developer mode is already enabled")
                         } else {
-                            if (devModeNumTimesPressed == 5) {
-                                showToast("You are now a developer")
+                            if (devModeNumTimesPressed == 4) {
+                                showToast("Developer mode is now enabled. See the Settings screen for details")
                                 settingsModel.devMode.value = true
                             } else {
-                                showToast("Tap ${5 - devModeNumTimesPressed} more times to become a developer")
+                                val tapsRemaining = 4 - devModeNumTimesPressed
+                                if (tapsRemaining > 1) {
+                                    showToast("Tap $tapsRemaining more times to enable developer mode")
+                                } else {
+                                    showToast("Tap 1 more time to enable developer mode")
+                                }
                                 devModeNumTimesPressed += 1
                             }
                         }

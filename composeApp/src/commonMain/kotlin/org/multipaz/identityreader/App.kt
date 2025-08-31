@@ -227,8 +227,6 @@ class App(
             return
         }
 
-        PromptDialogs(promptModel)
-
         val coroutineScope = rememberCoroutineScope()
 
         // At application-startup, update trusted issuers and ensure reader keys.
@@ -353,10 +351,10 @@ class App(
                         documentTypeRepository = documentTypeRepository,
                         issuerTrustManager = compositeTrustManager,
                         onBackPressed = { urlLaunchData?.finish() ?: navController.navigateUp() },
-                        onShowDetailedResults = {
-                            if (settingsModel.devMode.value) {
-                                navController.navigate(ShowDetailedResultsDestination.route)
-                            }
+                        onShowDetailedResults = if (settingsModel.devMode.value) {
+                            { navController.navigate(ShowDetailedResultsDestination.route) }
+                        } else {
+                            null
                         }
                     )
                 }

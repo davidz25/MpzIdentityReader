@@ -6,12 +6,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Bluetooth
+import androidx.compose.material.icons.outlined.DoorBack
 import androidx.compose.material.icons.outlined.Science
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -53,8 +58,9 @@ fun DeveloperSettingsScreen(
                 Text(
                     modifier = Modifier.padding(vertical = 16.dp),
                     text = """
-This screen contain developer settings. If you are not a developer you should probably not
-change any of these
+This screen contain settings used for diagnostics and debugging. In developer mode you can
+also double-tap the portrait or error icons on the results screen to view more detailed
+information
                     """.trimIndent().replace("\n", " ").trim(),
                 )
 
@@ -64,15 +70,43 @@ change any of these
                         horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.Start),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Switch(
+                        Icon(
+                            modifier = Modifier.size(32.dp),
+                            imageVector = Icons.Outlined.Bluetooth,
+                            contentDescription = null
+                        )
+                        EntryItem(
+                            modifier = Modifier.weight(1.0f),
+                            key = "Use L2CAP",
+                            valueText = "If enabled, L2CAP will be enabled for Bluetooth Low Energy connections"
+                        )
+                        Checkbox(
                             checked = settingsModel.bleL2capEnabled.collectAsState().value,
                             onCheckedChange = { value ->
                                 settingsModel.bleL2capEnabled.value = value
                             },
                         )
+                    }
+                }
+
+                entries.add {
+                    Row(
+                        modifier = Modifier.clickable {
+                            settingsModel.devMode.value = false
+                            onBackPressed()
+                        },
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.Start),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(32.dp),
+                            imageVector = Icons.Outlined.DoorBack,
+                            contentDescription = null
+                        )
                         EntryItem(
-                            key = "Use L2CAP",
-                            valueText = "If enabled, L2CAP will be enabled for Bluetooth Low Energy connections"
+                            modifier = Modifier.weight(1.0f),
+                            key = "Exit developer mode",
+                            valueText = "You can reenter developer mode by tapping the title on the main screen five times"
                         )
                     }
                 }
