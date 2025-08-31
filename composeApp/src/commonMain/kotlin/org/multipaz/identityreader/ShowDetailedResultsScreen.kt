@@ -115,7 +115,7 @@ fun ShowDetailedResultsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            AppBar(
                 title = AnnotatedString(text = "Detailed Results"),
                 onBackPressed = onBackPressed,
             )

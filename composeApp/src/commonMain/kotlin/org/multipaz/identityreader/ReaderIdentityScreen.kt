@@ -144,7 +144,7 @@ fun ReaderIdentityScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            AppBar(
                 title = AnnotatedString(stringResource(Res.string.reader_identity_title)),
                 onBackPressed = onBackPressed,
             )

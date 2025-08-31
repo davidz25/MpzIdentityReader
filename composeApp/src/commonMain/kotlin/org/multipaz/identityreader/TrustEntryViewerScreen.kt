@@ -128,7 +128,7 @@ fun TrustEntryViewerScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            AppBar(
                 title = entry.value?.let {
                     when (it) {
                         is TrustEntryX509Cert -> AnnotatedString("IACA certificate")

@@ -128,7 +128,7 @@ fun TrustEntryEditorScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            AppBar(
                 title = AnnotatedString(
                     text = when (entry.value) {
                         is TrustEntryVical -> "Edit VICAL"

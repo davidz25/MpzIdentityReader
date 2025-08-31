@@ -5,15 +5,19 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.HelpOutline
+import androidx.compose.material.icons.automirrored.outlined.Help
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.AccountBalance
 import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material.icons.outlined.NoAccounts
-import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Science
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -49,7 +53,7 @@ private fun SettingsItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 8.dp)
+            modifier = Modifier.padding(horizontal = 12.dp)
         ) {
             leadingIcon()
         }
@@ -66,11 +70,15 @@ private fun SettingsItem(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AccountDialog(
+fun SettingsDialog(
     settingsModel: SettingsModel,
     onDismissed: () -> Unit,
     onUseWithoutGoogleAccountClicked: () -> Unit,
     onSignInToGoogleClicked: () -> Unit,
+    onReaderIdentityClicked: () -> Unit,
+    onTrustedIssuersClicked: () -> Unit,
+    onDeveloperSettingsClicked: () -> Unit,
+    onAboutClicked: () -> Unit,
 ) {
     val signedIn = settingsModel.signedIn.collectAsState()
 
@@ -82,10 +90,12 @@ fun AccountDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
+            colors = CardDefaults.cardColors(
+                contentColor = MaterialTheme.colorScheme.onBackground
+            ),
             shape = RoundedCornerShape(16.dp),
         ) {
             Column(
-                modifier = Modifier.padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.Top)
             ) {
                 Box() {
@@ -97,7 +107,7 @@ fun AccountDialog(
                     }
                     Text(
                         modifier = Modifier.fillMaxWidth().align(Alignment.Center),
-                        text = "Google Account",
+                        text = "Settings",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
@@ -106,7 +116,7 @@ fun AccountDialog(
             }
 
             Column(
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+                modifier = Modifier.padding(horizontal = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.Top)
             ) {
                 Card(
@@ -155,6 +165,47 @@ fun AccountDialog(
                             )
                         }
                     }
+                }
+
+                Column(
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.Top)
+                ) {
+                    SettingsItem(
+                        text = { Text("Reader identity") },
+                        leadingIcon = {
+                            Icon(Icons.Outlined.Fingerprint, contentDescription = null)
+                        },
+                        onClick = { onReaderIdentityClicked() }
+                    )
+
+                    SettingsItem(
+                        text = { Text("Trusted issuers") },
+                        leadingIcon = {
+                            Icon(Icons.Outlined.AccountBalance, contentDescription = null)
+                        },
+                        onClick = { onTrustedIssuersClicked() }
+                    )
+
+                    if (settingsModel.devMode.value) {
+                        SettingsItem(
+                            text = { Text("Developer settings") },
+                            leadingIcon = {
+                                Icon(Icons.Outlined.Science, contentDescription = null)
+                            },
+                            onClick = { onDeveloperSettingsClicked() }
+                        )
+                    }
+
+                    SettingsItem(
+                        text = { Text("About") },
+                        leadingIcon = {
+                            Icon(Icons.AutoMirrored.Outlined.Help, contentDescription = null)
+                        },
+                        onClick = { onAboutClicked() }
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }

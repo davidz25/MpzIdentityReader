@@ -40,7 +40,7 @@ fun SelectRequestScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            AppBar(
                 title = null,
                 onBackPressed = onBackPressed,
             )

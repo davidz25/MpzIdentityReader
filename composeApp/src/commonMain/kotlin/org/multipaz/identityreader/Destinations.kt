@@ -86,10 +86,6 @@ data object TrustedIssuersDestination : Destination {
     override val route = "trusted_issuers"
 }
 
-data object SettingsDestination : Destination {
-    override val route = "settings"
-}
-
 data object DeveloperSettingsDestination : Destination {
     override val route = "developer_settings"
 }

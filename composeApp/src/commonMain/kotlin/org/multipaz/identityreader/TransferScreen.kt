@@ -58,7 +58,7 @@ fun TransferScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            AppBar(
                 onBackPressed = onBackPressed,
             )
         },

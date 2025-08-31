@@ -231,7 +231,7 @@ fun TrustedIssuersScreen(
             )
         },
         topBar = {
-            TopAppBar(
+            AppBar(
                 title = AnnotatedString(stringResource(Res.string.trusted_issuers_screen_title)),
                 onBackPressed = onBackPressed,
             )

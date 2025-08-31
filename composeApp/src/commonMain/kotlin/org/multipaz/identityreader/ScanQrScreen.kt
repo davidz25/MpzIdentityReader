@@ -42,7 +42,7 @@ fun ScanQrScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            AppBar(
                 title = AnnotatedString(stringResource(Res.string.scan_qr_title)),
                 onBackPressed = onBackPressed,
             )

@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,30 +25,28 @@ import org.jetbrains.compose.resources.stringResource
  *
  * @param title the title to show or `null` to not show a title.
  * @param onBackPressed the function to call when the back arrow is pressed or `null` to not show a back arrow.
- * @param onMenuPressed the function to call when the menu icon is pressed or `null` to not show a menu icon.
  * @param onAccountPressed the function to call when the account icon is pressed or `null` to not show an account icon.
- * @param settingsModel the [SettingsModel], must be non-null if onMenuPressed is non-null
- * @param actions additional actions to show
+ * @param settingsModel the [SettingsModel], must be non-null if onMenuPressed is non-null.
+ * @param actions additional actions to show.
+ * @param titleClickable true if the title should be clickable.
+ * @param onTitleClicked invoked when the title bar is clicked.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopAppBar(
+fun AppBar(
     title: AnnotatedString? = null,
     onBackPressed: (() -> Unit)? = null,
-    onMenuPressed: (() -> Unit)? = null,
     onAccountPressed: (() -> Unit)? = null,
     settingsModel: SettingsModel? = null,
     actions: @Composable (RowScope.() -> Unit) = {},
-    titleClicable: Boolean = false,
+    titleClickable: Boolean = false,
     onTitleClicked: (() -> Unit)? = null
 ) {
-    // Can't have both back and menu at the same time...
-    require(onBackPressed == null || onMenuPressed == null)
     CenterAlignedTopAppBar(
         title = {
             title?.let {
                 Text(
-                    modifier = Modifier.clickable(enabled = titleClicable) {
+                    modifier = Modifier.clickable(enabled = titleClickable) {
                         onTitleClicked!!.invoke()
                     },
                     text = it
@@ -58,14 +55,7 @@ fun TopAppBar(
         },
         modifier = Modifier,
         navigationIcon = {
-            if (onMenuPressed != null) {
-                IconButton(onClick = onMenuPressed) {
-                    Icon(
-                        imageVector = Icons.Filled.Menu,
-                        contentDescription = null
-                    )
-                }
-            } else if (onBackPressed != null) {
+            if (onBackPressed != null) {
                 IconButton(onClick = onBackPressed) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,

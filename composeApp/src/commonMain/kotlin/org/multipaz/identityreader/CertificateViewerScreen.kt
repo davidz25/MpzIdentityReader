@@ -61,7 +61,7 @@ fun CertificateViewerScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            AppBar(
                 title = AnnotatedString(stringResource(
                     if (certificate.value != null) {
                         Res.string.show_certificate_screen_title

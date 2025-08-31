@@ -1,31 +1,19 @@
 package org.multipaz.identityreader
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Help
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -35,10 +23,8 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,10 +47,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.io.bytestring.ByteString
 import multipazidentityreader.composeapp.generated.resources.Res
-import multipazidentityreader.composeapp.generated.resources.about_screen_title
 import multipazidentityreader.composeapp.generated.resources.nfc_icon
 import multipazidentityreader.composeapp.generated.resources.qr_icon
-import multipazidentityreader.composeapp.generated.resources.settings_screen_title
 import multipazidentityreader.composeapp.generated.resources.start_screen_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -155,14 +139,14 @@ fun StartScreen(
         handover: DataItem,
         updateMessage: ((message: String) -> Unit)?
     ) -> Unit,
-    onSettingsClicked: () -> Unit,
+    onReaderIdentityClicked: () -> Unit,
+    onTrustedIssuersClicked: () -> Unit,
+    onDeveloperSettingsClicked: () -> Unit,
     onAboutClicked: () -> Unit,
-    onReaderIdentitiesClicked: () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     val blePermissionState = rememberBluetoothPermissionState()
     val showAccountDialog = remember { mutableStateOf(false) }
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val showSignInErrorDialog = remember { mutableStateOf<Throwable?>(null) }
     snackbarHostState = remember { SnackbarHostState() }
 
@@ -186,7 +170,7 @@ fun StartScreen(
     }
 
     if (showAccountDialog.value) {
-        AccountDialog(
+        SettingsDialog(
             settingsModel = settingsModel,
             onDismissed = { showAccountDialog.value = false },
             onUseWithoutGoogleAccountClicked = {
@@ -218,6 +202,22 @@ fun StartScreen(
                     }
                 }
             },
+            onReaderIdentityClicked = {
+                showAccountDialog.value = false
+                onReaderIdentityClicked()
+            },
+            onTrustedIssuersClicked = {
+                showAccountDialog.value = false
+                onTrustedIssuersClicked()
+            },
+            onDeveloperSettingsClicked = {
+                showAccountDialog.value = false
+                onDeveloperSettingsClicked()
+            },
+            onAboutClicked = {
+                showAccountDialog.value = false
+                onAboutClicked()
+            },
         )
     }
 
@@ -229,129 +229,74 @@ fun StartScreen(
     }
 
     var devModeNumTimesPressed by remember { mutableStateOf(0) }
-    ModalNavigationDrawer(
-        drawerContent = {
-            ModalDrawerSheet {
-                Column(
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        text = "Multipaz Identity Reader",
-                    )
-                    HorizontalDivider()
-
-                    NavigationDrawerItem(
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Settings,
-                                contentDescription = null
-                            )
-                        },
-                        label = { Text(text = stringResource(Res.string.settings_screen_title)) },
-                        selected = false,
-                        onClick = {
-                            onSettingsClicked()
-                            coroutineScope.launch { drawerState.close() }
-                        }
-                    )
-                    NavigationDrawerItem(
-                        icon = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Outlined.Help,
-                                contentDescription = null
-                            )
-                        },
-                        label = { Text(text = stringResource(Res.string.about_screen_title)) },
-                        selected = false,
-                        onClick = {
-                            onAboutClicked()
-                            coroutineScope.launch { drawerState.close() }
-                        }
-                    )
-                }
-            }
-        },
-        drawerState = drawerState
-    ) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = buildAnnotatedString {
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append(stringResource(Res.string.start_screen_title))
-                        }
-                    },
-                    onMenuPressed = {
-                        coroutineScope.launch {
-                            drawerState.open()
-                        }
-                    },
-                    onAccountPressed = {
-                        showAccountDialog.value = true
-                    },
-                    settingsModel = settingsModel,
-                    titleClicable = true,
-                    onTitleClicked = {
-                        if (settingsModel.devMode.value) {
-                            showToast("Developer mode is already enabled")
+    Scaffold(
+        topBar = {
+            AppBar(
+                title = buildAnnotatedString {
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(stringResource(Res.string.start_screen_title))
+                    }
+                },
+                onAccountPressed = {
+                    showAccountDialog.value = true
+                },
+                settingsModel = settingsModel,
+                titleClickable = true,
+                onTitleClicked = {
+                    if (settingsModel.devMode.value) {
+                        showToast("Developer mode is already enabled")
+                    } else {
+                        if (devModeNumTimesPressed == 4) {
+                            showToast("Developer mode is now enabled. See the Settings screen for details")
+                            settingsModel.devMode.value = true
                         } else {
-                            if (devModeNumTimesPressed == 4) {
-                                showToast("Developer mode is now enabled. See the Settings screen for details")
-                                settingsModel.devMode.value = true
+                            val tapsRemaining = 4 - devModeNumTimesPressed
+                            if (tapsRemaining > 1) {
+                                showToast("Tap $tapsRemaining more times to enable developer mode")
                             } else {
-                                val tapsRemaining = 4 - devModeNumTimesPressed
-                                if (tapsRemaining > 1) {
-                                    showToast("Tap $tapsRemaining more times to enable developer mode")
-                                } else {
-                                    showToast("Tap 1 more time to enable developer mode")
-                                }
-                                devModeNumTimesPressed += 1
+                                showToast("Tap 1 more time to enable developer mode")
+                            }
+                            devModeNumTimesPressed += 1
+                        }
+                    }
+                }
+            )
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+    ) { innerPadding ->
+        Surface(
+            modifier = Modifier.fillMaxSize().padding(innerPadding),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            StartScreenWithPermissions(
+                settingsModel = settingsModel,
+                promptModel = promptModel,
+                mdocTransportOptionsForNfcEngagement = mdocTransportOptionsForNfcEngagement,
+                onScanQrClicked = onScanQrClicked,
+                onNfcHandover = onNfcHandover,
+                onOpportunisticSignInToGoogle = {
+                    // Only opportunistically try to sign in the user except
+                    //  - they explicitly signed out
+                    //  - they dismissed the dialog for an opportunistic sign-in attempt
+                    if (settingsModel.signedIn.value == null && !settingsModel.explicitlySignedOut.value) {
+                        coroutineScope.launch {
+                            try {
+                                signIn(
+                                    explicitSignIn = false,
+                                    settingsModel = settingsModel,
+                                    readerBackendClient = readerBackendClient
+                                )
+                            } catch (e: SignInWithGoogleDismissedException) {
+                                // If the user explicitly dismissed this, don't try to sign them in again
+                                settingsModel.explicitlySignedOut.value = true
+                            } catch (e: Throwable) {
+                                Logger.e(TAG, "Error signing into Google", e)
                             }
                         }
                     }
-                )
-            },
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        ) { innerPadding ->
-            Surface(
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
-                color = MaterialTheme.colorScheme.background
-            ) {
-                StartScreenWithPermissions(
-                    settingsModel = settingsModel,
-                    promptModel = promptModel,
-                    mdocTransportOptionsForNfcEngagement = mdocTransportOptionsForNfcEngagement,
-                    onScanQrClicked = onScanQrClicked,
-                    onNfcHandover = onNfcHandover,
-                    onOpportunisticSignInToGoogle = {
-                        // Only opportunistically try to sign in the user except
-                        //  - they explicitly signed out
-                        //  - they dismissed the dialog for an opportunistic sign-in attempt
-                        if (settingsModel.signedIn.value == null && !settingsModel.explicitlySignedOut.value) {
-                            coroutineScope.launch {
-                                try {
-                                    signIn(
-                                        explicitSignIn = false,
-                                        settingsModel = settingsModel,
-                                        readerBackendClient = readerBackendClient
-                                    )
-                                } catch (e: SignInWithGoogleDismissedException) {
-                                    // If the user explicitly dismissed this, don't try to sign them in again
-                                    settingsModel.explicitlySignedOut.value = true
-                                } catch (e: Throwable) {
-                                    Logger.e(TAG, "Error signing into Google", e)
-                                }
-                            }
-                        }
-                    },
-                    onReaderIdentitiesClicked = onReaderIdentitiesClicked
-                )
-            }
+                },
+                onReaderIdentityClicked = onReaderIdentityClicked
+            )
         }
     }
 }
@@ -369,7 +314,7 @@ private fun StartScreenWithPermissions(
         updateMessage: ((message: String) -> Unit)?
     ) -> Unit,
     onOpportunisticSignInToGoogle: () -> Unit,
-    onReaderIdentitiesClicked: () -> Unit
+    onReaderIdentityClicked: () -> Unit
 ) {
     val isDarkTheme = isSystemInDarkTheme()
     val selectedQueryName = remember { mutableStateOf(
@@ -486,7 +431,7 @@ private fun StartScreenWithPermissions(
         Spacer(modifier = Modifier.weight(0.2f))
         RequestingData(
             settingsModel = settingsModel,
-            onClicked = onReaderIdentitiesClicked
+            onClicked = onReaderIdentityClicked
         )
         Spacer(modifier = Modifier.weight(0.3f))
 

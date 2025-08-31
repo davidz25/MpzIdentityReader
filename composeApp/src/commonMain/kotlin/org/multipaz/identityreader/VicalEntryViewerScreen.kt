@@ -59,7 +59,7 @@ fun VicalEntryViewerScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            AppBar(
                 title = AnnotatedString("VICAL entry"),
                 onBackPressed = onBackPressed,
             )

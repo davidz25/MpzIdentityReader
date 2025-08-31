@@ -286,9 +286,10 @@ class App(
                             )
                             navController.navigate(route = TransferDestination.route)
                         },
-                        onSettingsClicked = { navController.navigate(route = SettingsDestination.route) },
+                        onReaderIdentityClicked = { navController.navigate(route = ReaderIdentityDestination.route) },
+                        onTrustedIssuersClicked = { navController.navigate(route = TrustedIssuersDestination.route) },
+                        onDeveloperSettingsClicked = { navController.navigate(route = DeveloperSettingsDestination.route) },
                         onAboutClicked = { navController.navigate(route = AboutDestination.route) },
-                        onReaderIdentitiesClicked = { navController.navigate(route = ReaderIdentityDestination.route) }
                     )
                 }
                 composable(route = ScanQrDestination.route) {
@@ -371,21 +372,6 @@ class App(
                                 route = CertificateViewerDestination.route + "/" + certificateDataBase64
                             )
                         },
-                    )
-                }
-                composable(route = SettingsDestination.route) {
-                    SettingsScreen(
-                        settingsModel = settingsModel,
-                        onBackPressed = { navController.navigateUp() },
-                        onReaderIdentityPressed = {
-                            navController.navigate(ReaderIdentityDestination.route)
-                        },
-                        onTrustedIssuersPressed = {
-                            navController.navigate(TrustedIssuersDestination.route)
-                        },
-                        onDeveloperSettingsPressed = {
-                            navController.navigate(DeveloperSettingsDestination.route)
-                        }
                     )
                 }
                 composable(route = DeveloperSettingsDestination.route) {
