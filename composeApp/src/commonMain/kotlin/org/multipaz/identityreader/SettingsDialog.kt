@@ -127,8 +127,8 @@ fun SettingsDialog(
                     shape = RoundedCornerShape(16.dp),
                 ) {
                     Column(
-                        modifier = Modifier.padding(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.Top)
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(24.dp, alignment = Alignment.Top)
                     ) {
                         if (signedIn.value != null) {
                             Row(
@@ -169,7 +169,7 @@ fun SettingsDialog(
 
                 Column(
                     modifier = Modifier.padding(horizontal = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.Top)
+                    verticalArrangement = Arrangement.spacedBy(24.dp, alignment = Alignment.Top)
                 ) {
                     SettingsItem(
                         text = { Text("Reader identity") },
