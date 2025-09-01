@@ -23,7 +23,7 @@ buildConfig {
     // signing key used to sign APKs available on https://apps.multipaz.org
     buildConfigField("IDENTITY_READER_BACKEND_URL",
         System.getenv("IDENTITY_READER_BACKEND_URL")
-            ?: "https://verifier.multipaz.org/identityreaderbackend"
+            ?: "https://identityreader.multipaz.org/"
     )
     // This server-side clientId works with APKs signed with the signing key in devkey.keystore
     buildConfigField("IDENTITY_READER_BACKEND_CLIENT_ID",
