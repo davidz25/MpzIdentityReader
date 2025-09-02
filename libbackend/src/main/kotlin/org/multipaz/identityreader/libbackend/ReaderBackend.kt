@@ -301,9 +301,9 @@ open class ReaderBackend(
                     data = ByteString(MultipazExtension(
                         googleAccount = GoogleAccount(
                             id = clientData.signedInGoogleUser!!.id,
-                            emailAddress = clientData.signedInGoogleUser!!.email ?: "",
-                            displayName = clientData.signedInGoogleUser!!.displayName ?: "",
-                            profilePictureUri = clientData.signedInGoogleUser!!.profilePictureUri ?: ""
+                            emailAddress = clientData.signedInGoogleUser!!.email,
+                            displayName = null,
+                            profilePictureUri = clientData.signedInGoogleUser!!.profilePictureUri
                         )
                     ).toCbor())
                 ))
